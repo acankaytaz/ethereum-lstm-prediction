@@ -38,9 +38,16 @@ veriler.pop('low')
 #machine learning
 #data preprocessing 
 
-scaler = MinMaxScaler()
 close_price = veriler.close.values.reshape(-1,1)
-scaled_price = scaler.fit_transform(close_price)  #normalized between 0-1
+
+# train/test split BEFORE scaling to avoid data leakage
+split_idx = int(len(close_price) * 0.80)
+train_price = close_price[:split_idx]
+test_price = close_price[split_idx:]
+
+scaler = MinMaxScaler()
+scaled_train = scaler.fit_transform(train_price)        # fit on train only
+scaled_test = scaler.transform(test_price)              # reuse train stats
 
 #train
 print("---------------------- \n")
@@ -50,11 +57,10 @@ def processData(veriler,lb):
         X.append(veriler[i:(i+lb),0])
         Y.append(veriler[(i+lb),0])
     return np.array(X),np.array(Y)
-  
+
 lb=100
-X,y = processData(scaled_price,lb)
-X_train,X_test = X[:int(X.shape[0]*0.80)],X[int(X.shape[0]*0.80):]
-y_train,y_test = y[:int(y.shape[0]*0.80)],y[int(y.shape[0]*0.80):]
+X_train, y_train = processData(scaled_train, lb)
+X_test, y_test = processData(scaled_test, lb)
 
 #bolünmüs verilerin değerleri
 # print(X_train.shape[0],X_train.shape[1])
